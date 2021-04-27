@@ -12,7 +12,7 @@ export class CreatePortfolioDto {
     @Length(0, 400, {message: 'Should be less than 400 symbols'})
     readonly description: string;
     
-    @ApiProperty({example: '1', description: 'Id of portfolio owner'})
-    @IsNumber({ allowNaN: false, allowInfinity: false},{message: 'Should be a number'})
-    readonly userId: number;
+    // @ApiProperty({example: '1', description: 'Id of portfolio owner'})
+    // @IsNumber({ allowNaN: false, allowInfinity: false},{message: 'Should be a number'})
+    // readonly userId: number;
 } 

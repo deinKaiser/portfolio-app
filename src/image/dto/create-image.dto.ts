@@ -13,6 +13,6 @@ export class CreateImageDto {
     readonly description: string;
     
     @ApiProperty({example: '1', description: 'Id of image portfolio'})
-    @IsNumber({ allowNaN: false, allowInfinity: false},{message: 'Should be a number'})
+    
     readonly portfolioId: number;
 } 

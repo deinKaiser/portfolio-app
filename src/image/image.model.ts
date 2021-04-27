@@ -23,7 +23,7 @@ export class Image {
     @Column()
     filename: string;
     
-    @ManyToOne(() => Portfolio, portfolio => portfolio.images)
+    @ManyToOne(() => Portfolio, portfolio => portfolio.images, {onDelete: 'CASCADE', eager: true})
     portfolio: Portfolio;
     
 }

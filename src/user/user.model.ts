@@ -25,7 +25,7 @@ export class User {
     @ApiProperty({example: [], description: 'Users` Portfolios'})
     @OneToMany(() => Portfolio, portfolio => portfolio.user, {
         cascade: true,
-        eager: true,
+        //eager: true,
     })
     portfolios: Portfolio[];
 }

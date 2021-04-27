@@ -1,6 +1,10 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DatabaseException } from 'src/exceptions/database.exeption';
+import { DatabaseException } from 'src/exceptions/database.exception';
+import { ForbiddenException } from 'src/exceptions/forbidden.exception';
+import { FileService } from 'src/file/file.service';
+import { Portfolio } from 'src/portfolio/portfolio.model';
+import { PortfolioService } from 'src/portfolio/portfolio.service';
 import { Repository } from 'typeorm';
 import { CreateImageDto } from './dto/create-image.dto';
 import { ImageFeedDto } from './dto/image-feed.dto';
@@ -9,10 +13,39 @@ import { Image } from './image.model';
 
 @Injectable()
 export class ImageService {
-    constructor(@InjectRepository(Image) private repository: Repository<Image>){}
+    constructor(
+        @InjectRepository(Image) private repository: Repository<Image>,
+        @InjectRepository(Portfolio) private portfolioRepository: Repository<Portfolio>,  
+        private fileService: FileService      
+    ){}
 
-    async create(dto: CreateImageDto, image) : Promise<Image>{ 
-        return new Image();
+    async create(dto: CreateImageDto, imageFile: any, req: any) : Promise<Image>{ 
+        try{
+            const imageOwner = await this.portfolioRepository.findOne( { where: { id: dto.portfolioId }});
+            if(!imageOwner){
+                throw new DatabaseException(`Portfolio with id ${dto.portfolioId} does not exist`, HttpStatus.NOT_FOUND)
+            }
+            if(imageOwner.user.id !== req.user.id){
+                throw new ForbiddenException('Not allowed to add images in someone elses portfolios')
+            }
+            const fileName = await this.fileService.createFile(imageFile);
+            const imageData = {
+                name: dto.name,
+                description: dto.description,
+                filename: fileName,
+                created_at: new Date()
+            }
+
+            const image = await this.repository.create(imageData);
+            image.portfolio = imageOwner;
+
+            await this.repository.save(image);
+
+            return image;
+        }
+        catch(e){
+            throw new HttpException(e.message, e.status || HttpStatus.INTERNAL_SERVER_ERROR)
+        }
     }
 
     async getImageFeed(): Promise<ImageFeedDto[]>{
@@ -21,17 +54,22 @@ export class ImageService {
             imagePath: `${process.env.HOST}:${process.env.PORT}/${image.filename}`, 
             imageName: image.name,
             description: image.description,
-            portfolioName: image.portfolio.name
+            portfolioName: image.portfolio.name,
+            creationDate: image.created_at,
         }})
         return feedImages;
     }
 
-    async updateById(id: number, dto: UpdateImageDto) {
+    async updateById(id: number, dto: UpdateImageDto, req: any) {
         try{
             const image = await this.repository.findOne({ where: { id }});
-              
+            
             if(!image){
                 throw new NotFoundException('Image not found')
+            }
+
+            if(image.portfolio.user.id !== req.user.id){
+                throw new ForbiddenException('Not allowed to update images in someone elses portfolios')
             }
 
             return this.repository.save({
@@ -40,28 +78,26 @@ export class ImageService {
             });
         }
         catch(e){
-            if(e instanceof NotFoundException){
-                throw new NotFoundException('Image not found')
-            } else {
-                throw new DatabaseException('Unexpected database failure', HttpStatus.INTERNAL_SERVER_ERROR)
-            }
+            throw new HttpException(e.message,e.HttpStatus);
         }
     }
 
-    async deleteById(id: number) {
+    async deleteById(id: number, req: any) {
         try{
-            const deleted = await this.repository.delete({ id: id });
-            if(!deleted.affected){
+            const image = await this.repository.findOne({ where: { id }});
+            
+            if(!image){
                 throw new NotFoundException('Image not found')
             }
-            return deleted;
+
+            if(image.portfolio.user.id !== req.user.id){
+                throw new ForbiddenException('Not allowed to update images in someone elses portfolios')
+            }
+
+            return await this.repository.delete({ id: id });
         }
         catch(e){
-            if(e instanceof NotFoundException){
-                throw new NotFoundException('Image not found')
-            } else {
-                throw new DatabaseException('Unexpected database failure', HttpStatus.INTERNAL_SERVER_ERROR)
-            }
+            throw new HttpException(e.message,e.HttpStatus);
         }
     }
 
@@ -74,12 +110,7 @@ export class ImageService {
             return image;
         }
         catch(e){
-            if(e instanceof NotFoundException){
-                throw new NotFoundException('Image not found')
-            } else {
-                throw new DatabaseException('Unexpected database failure', HttpStatus.INTERNAL_SERVER_ERROR)
-            }
-
+            throw new HttpException(e.message,e.HttpStatus);
         }
     }
 

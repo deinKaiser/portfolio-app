@@ -1,10 +1,12 @@
 
 export class ImageFeedDto {
-    readonly imagePath:string;
+    imagePath:string;
 
-    readonly imageName:string;
+    imageName:string;
 
-    readonly description:string;
+    description:string;
 
-    readonly portfolioName:string;
+    portfolioName:string;
+
+    creationDate:Date;
 }

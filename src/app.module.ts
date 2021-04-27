@@ -7,6 +7,7 @@ import { ImageModule } from './image/image.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import * as path from 'path';
 import {config} from './ormconfig';
+import { AuthModule } from './auth/auth.module';
 
 
 @Module({
@@ -20,7 +21,8 @@ import {config} from './ormconfig';
     }),
     ImageModule,
     PortfolioModule,
-    UserModule
+    UserModule,
+    AuthModule
   ],
   
 })

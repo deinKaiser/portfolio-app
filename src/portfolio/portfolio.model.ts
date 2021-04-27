@@ -15,11 +15,11 @@ export class Portfolio {
 
     @OneToMany(() => Image, image => image.portfolio, {
         cascade: true,
-        eager: true,
+        //eager: true,
     })
     images: Image[];
 
-    @ManyToOne(() => User, user => user.portfolios)
+    @ManyToOne(() => User, user => user.portfolios, {onDelete: 'CASCADE', eager: true})
     user: User;
 }
 
