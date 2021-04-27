@@ -5,11 +5,11 @@ import { Image } from "./image/image.model"
 
 export const config: TypeOrmModuleOptions = {
    type: 'postgres',
-   host: 'localhost',
-   port: 5432,
-   username: 'postgres',
-   password: 'postgres',
-   database: 'portfolio',
+   host: process.env.POSTGRES_HOST,
+   port: Number(process.env.POSTGRESS_PORT),
+   username: process.env.POSTGRES_USER,
+   password: process.env.POSTGRESS_PASSWORD,
+   database: process.env.POSTGRES_DB,
    entities: [User, Portfolio, Image], 
    migrations: ['dist/migrations/*{.js}'],
    cli: {
